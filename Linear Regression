@@ -12,9 +12,10 @@ def loadDataSet():
         piece = dataRaw[18 * i:18 * i + 18]
         pieceT = piece.T
         data = pd.merge(data, pieceT, how='outer')
-    data['bias']  = 1
+    data['bias'] = 1
     data.iloc[:, 10] = 0  ## 0  represents no rain
     return data
+
 
 def gradientDescent(trainData, weights0, alpha, num_iters):
     Loss = []
@@ -39,21 +40,67 @@ def gradientDescent(trainData, weights0, alpha, num_iters):
             data_jS = data_jS.to_numpy()
             data_jV = data_jS.astype(float)  # float value
             Loss_k = Loss_k + np.sqrt(np.square(np.dot(data_jV, weights) - data_jV[9]))
-        Loss_k = Loss_k / 2 / trainData.shape[0]    #loss = (y^-(b+wx)).^2/2m
+        Loss_k = Loss_k / 2 / trainData.shape[0]  # loss = (y^-(b+wx)).^2/2m
         Loss.append(Loss_k)
         print("the round completed", k, "the loss is", Loss_k, "\n")
     return weights, Loss
 
+
+def stochasticGradientDescent(trainData, weights0, alpha, num_iters):
+    Loss = []
+    for k in range(num_iters):
+        n = weights0.size
+        weights = weights0
+
+        j = 0
+        for i in range(trainData.shape[0]):
+            S = 0
+            if j == 9:
+                continue
+            data_jS = trainData.iloc[i]  # string
+            data_jS = data_jS.to_numpy()
+            data_jV = data_jS.astype(float)  # float value
+            S = S + (np.dot(data_jV, weights) - data_jV[9]) * data_jV[j]
+            j = j + 1
+            weights[j] = weights[j] - S * alpha / np.sqrt(k + 1) / trainData.shape[0]
+
+        Loss_k = 0
+        for i in range(trainData.shape[0]):
+            data_jS = trainData.iloc[i]  # string
+            data_jS = data_jS.to_numpy()
+            data_jV = data_jS.astype(float)  # float value
+            Loss_k = Loss_k + np.sqrt(np.square(np.dot(data_jV, weights) - data_jV[9]))
+        Loss_k = Loss_k / 2 / trainData.shape[0]  # loss = (y^-(b+wx)).^2/2m
+        Loss.append(Loss_k)
+        print("the round completed", k, "the loss is", Loss_k, "\n")
+
+
+def calLoss_on_testingData(testingData, weights):
+    n = testingData.shape[0]
+    Loss = 0
+    for i in range(n):
+        data_jS = testingData.iloc[i]  # string
+        data_jS = data_jS.to_numpy()
+        data_jV = data_jS.astype(float)  # float value
+        Loss = Loss + np.sqrt(np.square(np.dot(data_jV, weights) - data_jV[9]))
+    Loss = Loss / 2 / n
+    return Loss
+
+
 def main():
     trainData = loadDataSet()
-    alpha = 0.00005;
-    num_iters = 100;
+    alpha = 0.00003;
+    # alpha = 0.05
+    num_iters = 30;
     weights = np.random.random(19)
     weights[9] = 0;  # [9] is pm2.5
-    [weights, Loss] = gradientDescent(trainData.iloc[:3000], weights, alpha, num_iters)  #3000/5640 data used to train
-    t = np.arange(0, len(Loss)-10)
-    plt.plot(t,Loss[10:])
+    [weights, Loss] = gradientDescent(trainData.iloc[:3000], weights, alpha, num_iters)  # 3000/5640 data used to train
+    t = np.arange(0, len(Loss) )
+    plt.plot(t, Loss)
     plt.show()
+    loss_on_TestingData = calLoss_on_testingData(trainData[3000:], weights)
+    print("the loss of model on testingdata is", loss_on_TestingData)
+
 
 if __name__ == '__main__':
     main()
