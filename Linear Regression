@@ -75,10 +75,8 @@ def calLoss_on_testingData(testingData, weights):
     n = testingData.shape[0]
     Loss = 0
     for i in range(n):
-        data_jS = testingData.iloc[i]  # string
-        data_jS = data_jS.to_numpy()
-        data_jV = data_jS.astype(float)  # float value
-        Loss = Loss + np.sqrt(np.square(np.dot(data_jV, weights) - data_jV[9]))
+        data_single = testingData.iloc[i]
+        Loss_k = Loss_k + np.absolute(data_single.dot(weights) - data_single[9])
     Loss = Loss / 2 / n
     return Loss
 
